@@ -22,16 +22,17 @@ module Darwinning
       @generation = 0 # initial population is generation 0
       @history = []
 
-      build_population(@population_size)
+      build_population
       initialize_history
     end
 
-    def build_population(population_size)
-      population_size.times do |i|
     def initialize_history
       return if @history.any?
       @history << sorted_members
     end
+
+    def build_population
+      @population_size.times do |i|
         @members << build_member
       end
     end
@@ -43,9 +44,8 @@ module Darwinning
     end
 
     def set_members_fitness!(fitness_values)
-      verify_fitness_values!
-      members.to_enum.each_with_index { |m, i| m.fitness = fitness_values[i] }
-      sort_members
+      verify_fitness_values!(fitness_values)
+      @members.to_enum.each_with_index { |m, i| m.fitness = fitness_values[i] }
     end
 
     def make_next_generation!
@@ -64,8 +64,7 @@ module Darwinning
       new_members.pop if new_members.length > members.length
 
       @members = apply_non_pairwise_evolutions(new_members)
-      sort_members
-      @history << @members
+      @history << sorted_members
       @generation += 1
     end
 
@@ -112,14 +111,14 @@ module Darwinning
       end
     end
 
-    def sort_members
+    def sorted_members
       case @fitness_objective
       when :nullify
-        @members = @members.sort_by { |m| m.fitness ? m.fitness.abs : m.fitness }
+        @members.sort_by! { |m| m.fitness ? m.fitness.abs : m.fitness }
       when :maximize
-        @members = @members.sort_by { |m| m.fitness }.reverse
+        @members.sort_by! { |m| m.fitness }.reverse
       else
-        @members = @members.sort_by { |m| m.fitness }
+        @members.sort_by! { |m| m.fitness }
       end
     end
 
@@ -128,18 +127,18 @@ module Darwinning
       raise SizeError.new('Population size must be a positive number')
     end
 
-    def verify_fitness_values!
-      return if fitness_values.size == members.size
+    def verify_fitness_values!(fitness_values)
+      return if fitness_values.size == @members.size
       raise FitnessValueError.new('Invaid number of fitness values for population size')
     end
 
     def build_member
       member = organism.new
-      unless member.class < Darwinning::Organism
-        member.class.genes.each do |gene|
-          gene_expression = gene.express
-          member.send("#{gene.name}=", gene_expression)
-        end
+      return member if member.kind_of? Organism
+
+      member.class.genes.each do |gene|
+        gene_expression = gene.express
+        member.send("#{gene.name}=", gene_expression)
       end
       member
     end
