@@ -1,6 +1,7 @@
 module Darwinning
   module EvolutionTypes
     class Reproduction
+      class IncompatibleOrganismsError < RuntimeError; end
 
       # Available crossover_methods:
       #   :alternating_swap
@@ -20,7 +21,7 @@ module Darwinning
       protected
 
       def sexytimes(m1, m2)
-        raise "Only organisms of the same type can breed" unless m1.class == m2.class
+        verify_organism_compatability!(m1, m2)
 
         new_genotypes = send(@crossover_method, m1, m2)
 
@@ -73,6 +74,13 @@ module Darwinning
         end
 
         [genotypes1, genotypes2]
+      end
+
+      private
+
+      def verify_organism_compatability!(m1, m2)
+      return if m1.class == m2.class
+      raise IncompatibleOrganismsError.new('Only organisms of the same type can breed')
       end
     end
   end

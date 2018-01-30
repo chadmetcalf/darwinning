@@ -1,5 +1,6 @@
 module Darwinning
   class Population
+    class SizeError < RuntimeError; end
 
     attr_reader :members, :generations_limit, :fitness_goal, :fitness_objective,
                 :organism, :population_size, :generation,
@@ -42,7 +43,7 @@ module Darwinning
     end
 
     def set_members_fitness!(fitness_values)
-      throw "Invaid number of fitness values for population size" if fitness_values.size != members.size
+      verify_fitness_values!
       members.to_enum.each_with_index { |m, i| m.fitness = fitness_values[i] }
       sort_members
     end
@@ -123,9 +124,13 @@ module Darwinning
     end
 
     def verify_population_size_is_positive!
-      unless @population_size.positive?
-        raise "Population size must be a positive number!"
-      end
+      return if @population_size.positive?
+      raise SizeError.new('Population size must be a positive number')
+    end
+
+    def verify_fitness_values!
+      return if fitness_values.size == members.size
+      raise FitnessValueError.new('Invaid number of fitness values for population size')
     end
 
     def build_member

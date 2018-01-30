@@ -44,7 +44,7 @@ describe Darwinning::Population do
           organism: Triple, fitness_goal: 0, population_size: 0
         )
 
-        expect { population.make_next_generation! }.to raise_error(RuntimeError)
+        expect { population.make_next_generation! }.to raise_error(Darwinning::Population::SizeError)
       end
     end
   end
